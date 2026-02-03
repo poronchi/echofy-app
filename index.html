@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Echofy">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3603/3603442.png">
+    
+    <meta name="theme-color" content="#fdfdfe">
+    <title>Echofy - El Eco del Aprendizaje</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sat: env(safe-area-inset-top);
+            --sar: env(safe-area-inset-right);
+            --sab: env(safe-area-inset-bottom);
+            --sal: env(safe-area-inset-left);
+        }
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            overflow: hidden;
+            background: #fdfdfe;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            touch-action: none; /* Bloqueo total de gestos del navegador */
+            overscroll-behavior-y: none; /* Bloqueo de pull-to-refresh */
+        }
+        
+        .font-elegant {
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        .animate-in {
+            animation-fill-mode: both;
+            animation-duration: 0.5s;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .fade-in { animation-name: fadeIn; }
+        .zoom-in-95 { animation-name: zoomIn95; }
+        
+        .animate-levitate {
+            animation: levitate 3s infinite ease-in-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomIn95 { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        @keyframes levitate {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes glowSignal {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.03); filter: brightness(1.1); box-shadow: 0 0 15px rgba(255,255,255,0.4); }
+        }
+        
+        .animate-glow-signal { animation: glowSignal 2s infinite ease-in-out; }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            display: block;
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+        }
+        
+        /* Ajuste para el notch de iPhone */
+        .safe-padding-top { padding-top: var(--sat); }
+        .safe-padding-bottom { padding-bottom: var(--sab); }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.36.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Echofy SW Ready'))
+                    .catch(err => console.log('SW Error:', err));
+            });
+        }
+        
+        // Bloqueo manual de zoom por doble toque y pull-to-refresh
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+        
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) e.preventDefault();
+            lastTouchEnd = now;
+        }, false);
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
