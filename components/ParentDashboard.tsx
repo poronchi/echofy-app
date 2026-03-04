@@ -245,52 +245,55 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
   };
 
   const renderParentView = () => (
-    <div className="flex-1 flex flex-col justify-between animate-in fade-in duration-700 min-h-0">
-      {/* 1. CABECERA HEROICA REFINADA */}
-      <div className="text-center px-6 pt-2 space-y-4 flex-shrink-0">
-        <p className="text-slate-400 text-[13px] sm:text-[15px] leading-relaxed max-w-xs mx-auto font-medium">
-          ¡Aprender a deletrear es una gran aventura! Tu hijo juega y conquista palabras a su propio ritmo, mientras tú celebras cada victoria y monitoreas su camino hacia la maestría.
-        </p>
-        <p className="text-indigo-400/80 text-[12px] sm:text-[14px] font-bold italic tracking-wide">
-          ¡Aquí el error es solo el primer paso para ganar! 🚀🏆
-        </p>
-      </div>
+    /* CONTENEDOR PRINCIPAL: Ocupa toda la pantalla, pero define áreas seguras */
+    <div className="absolute inset-0 flex flex-col pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(11rem+env(safe-area-inset-bottom))]">
+      
+      {/* ZONA SEGURA SCROLLABLE: El contenido vive aquí y SOLO aquí. Si crece, hace scroll interno. */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col items-center justify-center gap-4 px-6">
+        
+        {/* 1. DESCRIPCIÓN */}
+        <div className="text-center animate-in fade-in slide-in-from-top-4 duration-700 shrink-0">
+          <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+            ¡Aprender a deletrear es una gran aventura!
+            Tu hijo juega y conquista palabras a su propio ritmo, mientras tú celebras cada victoria y monitoreas su camino hacia la conquista de las palabras.
+          </p>
+        </div>
 
-      {/* 2. ESPACIO CENTRAL - LLAMADO A LA AVENTURA (ESTÁTICO) */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 min-h-0 overflow-hidden select-none pointer-events-none">
-        <div className="flex flex-col items-center justify-center py-8 flex-shrink-0">
-           <div className="text-7xl mb-6 animate-levitate drop-shadow-2xl">✨</div>
-           <div className="space-y-2 text-center">
-             <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 opacity-40">
+        {/* 2. ESTRELLA Y ESLOGAN */}
+        <div className="flex flex-col items-center justify-center text-center space-y-4 animate-in zoom-in-95 duration-700 shrink-0 py-4">
+           <div className="text-6xl mb-2 animate-levitate drop-shadow-2xl filter grayscale-[0.2]">✨</div>
+           <div className="space-y-2 max-w-xs">
+             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
                El viaje del héroe
              </p>
-             <p className="text-[10px] font-medium italic text-slate-300 opacity-30 tracking-widest">
-               Tu hazaña comienza con una palabra...
+             <p className="text-xs font-medium italic text-slate-500 leading-relaxed px-4">
+               "Tu hazaña comienza con una palabra..."
              </p>
            </div>
         </div>
+
       </div>
 
-      {/* 3. PANEL DE CONTROL FLOTANTE (VOZ, TALLER, HISTORIAL) */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-white/80 backdrop-blur-xl border-t border-slate-100 z-40 animate-in slide-in-from-bottom-10 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-        <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
+      {/* 3. PANEL DE CONTROL FLOTANTE (VOZ, TALLER, HISTORIAL) - FIJO */}
+      <div className="fixed bottom-[calc(110px+env(safe-area-inset-bottom))] left-0 right-0 px-4 z-40 flex justify-center pointer-events-none">
+        <div className="w-full max-w-md grid grid-cols-3 gap-3 pointer-events-auto">
           {/* BOTÓN VOZ */}
           <button onClick={() => setIsVoiceStudioOpen(true)} 
-                  className="bg-white/50 py-3 rounded-2xl border border-slate-100/50 flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:bg-white">
+                  className="bg-white/80 backdrop-blur-md py-3 rounded-2xl border border-slate-200/60 shadow-lg flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:bg-white">
             <span className="text-xl">🔊</span>
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">VOZ</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">VOZ</span>
           </button>
 
           {/* BOTÓN TALLER */}
           <button onClick={() => setIsTallerOpen(true)} 
-                  className={`py-3 rounded-2xl border flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:bg-white ${isTallerOpen ? 'bg-indigo-50/50 border-indigo-100 text-indigo-600' : 'bg-white/50 border-slate-100/50 text-slate-400'}`}>
+                  className={`py-3 rounded-2xl border shadow-lg backdrop-blur-md flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:bg-white ${isTallerOpen ? 'bg-indigo-50/80 border-indigo-100 text-indigo-600' : 'bg-white/80 border-slate-200/60 text-slate-500'}`}>
             <span className="text-xl">📦</span>
             <span className="text-[9px] font-black uppercase tracking-[0.2em]">TALLER</span>
           </button>
 
           {/* BOTÓN HISTORIAL */}
           <button onClick={() => setIsAchievementsOpen(true)} 
-                  className="bg-white/50 py-3 rounded-2xl border border-slate-100/50 flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:bg-white">
+                  className="bg-white/80 backdrop-blur-md py-3 rounded-2xl border border-slate-200/60 shadow-lg flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:bg-white">
             <span className="text-xl">🏆</span>
             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-500">HISTORIAL</span>
           </button>
@@ -305,7 +308,7 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
     const totalErrors = listsWithErrors.reduce((acc, l) => acc + l.words.filter(w => (w.errors || 0) > 0).length, 0);
 
     return (
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-1 pb-48 animate-in fade-in duration-700 space-y-6">
+      <div className="flex-1 w-full max-w-md mx-auto space-y-6 pb-40 px-4">
         {/* ISLA DE PRÁCTICA - Solo visible si hay deudas de aprendizaje */}
         {totalErrors > 0 && (
           <div onClick={() => onStartGame(listsWithErrors[0].id, 'repaso')}
@@ -326,7 +329,7 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5 px-1.5 sm:gap-4 sm:px-4">
           {lists.map((list, i) => {
             const logros = list.words.filter(w => w.completed && (w.errors || 0) === 0).length;
             const retos = list.words.filter(w => (w.errors || 0) > 0).length;
@@ -336,7 +339,7 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
             
             return (
               <div key={list.id} onClick={() => onStartGame(list.id, 'normal')}
-                   className="relative aspect-square p-4 rounded-[2rem] shadow-xl transition-all active:scale-[0.95] group overflow-hidden">
+                   className="relative aspect-square p-3 rounded-[1.5rem] shadow-xl transition-all active:scale-[0.95] group overflow-hidden">
                 <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} transition-transform group-hover:scale-110`}></div>
                 <div className="absolute inset-0 bg-black/5 mix-blend-overlay"></div>
                 
@@ -344,7 +347,7 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
                 {hasStar && (
                   <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none overflow-hidden">
                     {/* Estrella estática, sutil y elegante */}
-                    <svg viewBox="0 0 24 24" className="w-40 h-40 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] opacity-90" style={{ mixBlendMode: 'overlay' }}>
+                    <svg viewBox="0 0 24 24" className="w-32 h-32 drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] opacity-90" style={{ mixBlendMode: 'overlay' }}>
                       <defs>
                         <linearGradient id={`starZen-${list.id}`} x1="50%" y1="0%" x2="50%" y2="100%">
                           <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
@@ -357,31 +360,31 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
                 )}
 
                 {/* Indicadores de Logros/Retos en esquina superior derecha */}
-                <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5 z-20">
+                <div className="absolute top-3 right-3 flex flex-col items-end gap-1 z-20">
                   {logros > 0 && (
-                    <div className="bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/20 flex items-center gap-1 shadow-sm">
-                      <span className="text-[9px] font-bold text-white uppercase tracking-tighter">Logros</span>
-                      <span className="text-[10px] font-black text-white">{logros}</span>
+                    <div className="bg-white/20 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-white/20 flex items-center gap-1 shadow-sm">
+                      <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Logros</span>
+                      <span className="text-[9px] font-black text-white">{logros}</span>
                     </div>
                   )}
                   {retos > 0 && (
-                    <div className="bg-black/20 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/5 flex items-center gap-1 shadow-sm">
-                      <span className="text-[9px] font-bold text-white/80 uppercase tracking-tighter">Retos</span>
-                      <span className="text-[10px] font-black text-white">{retos}</span>
+                    <div className="bg-black/20 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-white/5 flex items-center gap-1 shadow-sm">
+                      <span className="text-[8px] font-bold text-white/80 uppercase tracking-tighter">Retos</span>
+                      <span className="text-[9px] font-black text-white">{retos}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Estructura Bento / App Card */}
-                <div className="relative h-full flex flex-col items-center justify-center z-10 p-2">
+                <div className="relative h-full flex flex-col items-center justify-center z-10 p-1">
                   {/* Icono en esquina superior izquierda (estilo app) - ABEJA LIBRE */}
                   {!hasStar && (
-                    <div className="absolute top-2 left-2 w-12 h-12 flex items-center justify-center z-20">
+                    <div className="absolute top-1 left-1 w-10 h-10 flex items-center justify-center z-20">
                       {/* Sombra que respira (Paralaje) */}
-                      <div className="absolute bottom-1 w-5 h-1 bg-black/20 rounded-full blur-[1px] animate-shadow-breath"
+                      <div className="absolute bottom-1 w-4 h-1 bg-black/20 rounded-full blur-[1px] animate-shadow-breath"
                            style={{ animationDelay: `${(i * 0.4).toFixed(2)}s` }}></div>
                       {/* Abeja Levitando */}
-                      <div className={`text-3xl animate-levitate filter drop-shadow-sm ${list.themeIndex === 8 ? 'text-slate-400' : ''}`}
+                      <div className={`text-2xl animate-levitate filter drop-shadow-sm ${list.themeIndex === 8 ? 'text-slate-400' : ''}`}
                            style={{ animationDelay: `${(i * 0.4).toFixed(2)}s` }}>
                         🐝
                       </div>
@@ -389,11 +392,11 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
                   )}
                   
                   {/* Info Centrada */}
-                  <div className="space-y-4 text-center w-full flex flex-col items-center">
-                    <h3 className={`${list.themeIndex === 8 ? 'text-slate-800' : 'text-white'} font-bold text-[15px] sm:text-[17px] leading-tight drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.2)] line-clamp-2 w-full px-1`}>{list.name}</h3>
+                  <div className="space-y-3 text-center w-full flex flex-col items-center mt-4">
+                    <h3 className={`${list.themeIndex === 8 ? 'text-slate-800' : 'text-white'} font-bold text-[14px] sm:text-[16px] leading-tight drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.2)] line-clamp-2 w-full px-0.5`}>{list.name}</h3>
                     
                     <div className="relative w-full flex flex-col items-center">
-                      <div className="w-full h-2 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm max-w-[80%]">
+                      <div className="w-full h-1.5 bg-black/20 rounded-full overflow-hidden backdrop-blur-sm max-w-[80%]">
                         <div className="h-full bg-white/90 shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-1000" style={{ width: `${Math.max(5, progress)}%` }}></div>
                       </div>
                     </div>
@@ -672,12 +675,12 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 md:p-6 h-[100dvh] flex flex-col overflow-hidden">
-      {/* HEADER CON BOTÓN DE AJUSTES */}
-      <header className="flex items-center justify-between mb-4 mt-2 relative flex-shrink-0">
+    <div className="w-full h-full flex flex-col overflow-hidden relative">
+      {/* HEADER FIJO - GLASS */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-3 bg-white/80 backdrop-blur-xl border-b border-white/40 shadow-sm transition-all duration-300">
         <div className="w-10"></div> {/* Spacer */}
         <div 
-            className="flex flex-col items-center select-none cursor-pointer p-4 -m-4 rounded-2xl active:scale-95 transition-transform" 
+            className="flex flex-col items-center select-none cursor-pointer active:scale-95 transition-transform" 
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             onMouseDown={handleTouchStart}
@@ -695,7 +698,7 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
         ) : <div className="w-10"></div>}
       </header>
       
-      {/* INPUT FILE GLOBAL Y OCULTO - Accesible por Settings y por Banner de Recuperación */}
+      {/* INPUT FILE GLOBAL Y OCULTO */}
       <input 
           type="file" 
           accept=".json" 
@@ -704,8 +707,10 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
           className="hidden" 
       />
 
-
-      {role === 'child' ? renderChildView() : renderParentView()}
+      {/* CONTENIDO SCROLLABLE */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pt-[calc(6rem+env(safe-area-inset-top))] w-full">
+         {role === 'child' ? renderChildView() : renderParentView()}
+      </div>
       
       {isAchievementsOpen && renderAchievementsModal()}
       {isTallerOpen && renderTallerModal()}

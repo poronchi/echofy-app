@@ -17,6 +17,28 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Landscape Shield */
+@media (orientation: landscape) {
+  body::after {
+    content: "Por favor, gira tu dispositivo para continuar 📲";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #0f172a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    z-index: 99999;
+    text-align: center;
+    padding: 2rem;
+  }
+}
+
 .font-elegant {
   font-family: 'Outfit', sans-serif;
 }

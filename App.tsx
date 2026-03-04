@@ -35,6 +35,14 @@ const App: React.FC = () => {
     };
     document.addEventListener('touchstart', handleTouchStart, { passive: false });
 
+    // Intentar bloquear orientación
+    if (screen.orientation && 'lock' in screen.orientation) {
+      // @ts-ignore
+      screen.orientation.lock('portrait').catch(() => {
+        // Fallo silencioso, el escudo visual CSS se encargará
+      });
+    }
+
     return () => { 
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('touchstart', handleTouchStart);
@@ -74,7 +82,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="h-[100dvh] w-full bg-[#fdfdfe] text-slate-900 font-sans overflow-y-auto overflow-x-hidden safe-padding-top overscroll-y-contain scroll-smooth">
+    <div className="h-[100dvh] w-full bg-[#fdfdfe] text-slate-900 font-sans overflow-hidden safe-padding-top overscroll-y-contain scroll-smooth relative">
       <ParentDashboard 
         role={role} 
         onStartGame={handleStartGame} 
@@ -82,7 +90,7 @@ const App: React.FC = () => {
       />
       
       {!isModalOpen && (
-        <div className="fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[50] flex items-center gap-5 bg-white/90 backdrop-blur-xl px-6 py-3 rounded-full shadow-lg border border-slate-100 animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-[calc(25px+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[50] flex items-center gap-5 bg-white/90 backdrop-blur-xl px-6 py-3 rounded-full shadow-lg border border-slate-100 animate-in fade-in slide-in-from-bottom-4 transition-all duration-300">
           <span className={`text-[10px] font-bold tracking-[0.2em] transition-colors ${role === 'parent' ? 'text-slate-900' : 'text-slate-300'}`}>PADRE</span>
           <button onClick={toggleRole}
             className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${role === 'child' ? 'bg-emerald-500' : 'bg-slate-300'}`}>
