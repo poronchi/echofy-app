@@ -82,7 +82,7 @@ const App: React.FC = () => {
       />
       
       {!isModalOpen && (
-        <div className="fixed bottom-[calc(2.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[100] flex items-center gap-5 bg-white/80 backdrop-blur-xl px-6 py-3 rounded-full shadow-lg border border-slate-100 animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[50] flex items-center gap-5 bg-white/90 backdrop-blur-xl px-6 py-3 rounded-full shadow-lg border border-slate-100 animate-in fade-in slide-in-from-bottom-4">
           <span className={`text-[10px] font-bold tracking-[0.2em] transition-colors ${role === 'parent' ? 'text-slate-900' : 'text-slate-300'}`}>PADRE</span>
           <button onClick={toggleRole}
             className={`w-12 h-6 rounded-full relative transition-colors duration-300 ${role === 'child' ? 'bg-emerald-500' : 'bg-slate-300'}`}>

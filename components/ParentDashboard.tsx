@@ -271,26 +271,26 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
         </div>
       </div>
 
-      {/* 3. TRIPLE PÍLDORA HORIZONTAL (VOZ, TALLER, HISTORIAL) */}
-      <div className="px-4 pb-28 flex-shrink-0">
-        <div className="grid grid-cols-3 gap-3">
+      {/* 3. PANEL DE CONTROL FLOTANTE (VOZ, TALLER, HISTORIAL) */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-white/80 backdrop-blur-xl border-t border-slate-100 z-40 animate-in slide-in-from-bottom-10 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+        <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           {/* BOTÓN VOZ */}
           <button onClick={() => setIsVoiceStudioOpen(true)} 
-                  className="bg-white py-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:shadow-md">
+                  className="bg-white/50 py-3 rounded-2xl border border-slate-100/50 flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:bg-white">
             <span className="text-xl">🔊</span>
             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">VOZ</span>
           </button>
 
           {/* BOTÓN TALLER */}
           <button onClick={() => setIsTallerOpen(true)} 
-                  className={`py-4 rounded-[2rem] shadow-sm border flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:shadow-md ${isTallerOpen ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-white border-slate-100 text-slate-400'}`}>
+                  className={`py-3 rounded-2xl border flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:bg-white ${isTallerOpen ? 'bg-indigo-50/50 border-indigo-100 text-indigo-600' : 'bg-white/50 border-slate-100/50 text-slate-400'}`}>
             <span className="text-xl">📦</span>
             <span className="text-[9px] font-black uppercase tracking-[0.2em]">TALLER</span>
           </button>
 
           {/* BOTÓN HISTORIAL */}
           <button onClick={() => setIsAchievementsOpen(true)} 
-                  className="bg-white py-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:shadow-md">
+                  className="bg-white/50 py-3 rounded-2xl border border-slate-100/50 flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:bg-white">
             <span className="text-xl">🏆</span>
             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-500">HISTORIAL</span>
           </button>
@@ -305,7 +305,7 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
     const totalErrors = listsWithErrors.reduce((acc, l) => acc + l.words.filter(w => (w.errors || 0) > 0).length, 0);
 
     return (
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-1 pb-32 animate-in fade-in duration-700 space-y-6">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-1 pb-48 animate-in fade-in duration-700 space-y-6">
         {/* ISLA DE PRÁCTICA - Solo visible si hay deudas de aprendizaje */}
         {totalErrors > 0 && (
           <div onClick={() => onStartGame(listsWithErrors[0].id, 'repaso')}
