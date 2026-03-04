@@ -43,7 +43,11 @@ export const isPremiumVoice = (voice: SpeechSynthesisVoice): boolean => {
 export const getCategorizedVoices = () => {
   if (typeof window === 'undefined' || !window.speechSynthesis) return { elite: [], backup: [] };
   const allVoices = window.speechSynthesis.getVoices();
-  const usVoices = allVoices.filter(v => v.lang.toLowerCase().replace('_', '-').startsWith('en-us'));
+  
+  // Deduplicate voices based on voiceURI to prevent React key errors
+  const uniqueVoices = Array.from(new Map(allVoices.map(v => [v.voiceURI, v])).values());
+  
+  const usVoices = uniqueVoices.filter(v => v.lang.toLowerCase().replace('_', '-').startsWith('en-us'));
 
   if (usVoices.length === 0) return { elite: [], backup: [] };
 
@@ -112,27 +116,4 @@ export const speakWordPromise = (word: string, lang: string = 'en-US', interrupt
   });
 };
 
-/**
- * Genera una imagen de fondo de victoria temática usando Gemini 2.5 Flash.
- * Solo funciona si hay conexión.
- */
-export const generateVictoryGift = async (worldName: string): Promise<string | null> => {
-  if (!navigator.onLine) return null;
-  
-  try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: [{ parts: [{ text: `A soft watercolor digital painting for a children's game background. Theme: "${worldName}". Magical, dreamy atmosphere, pastel colors, high-key lighting, empty space in the middle for UI, extremely cute and calming.` }] }],
-    });
 
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-  } catch (error) {
-    console.error("Gemini Gift Error:", error);
-  }
-  return null;
-};

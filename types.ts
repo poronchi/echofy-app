@@ -30,4 +30,5 @@ export interface VoiceSettings {
   voiceURI: string | null;
   rate: number;
   pitch: number;
+  hiddenVoices: string[];
 }
