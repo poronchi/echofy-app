@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { VoiceSettings } from '../types';
 import { loadVoiceSettings, saveVoiceSettings } from '../store';
-import { isPremiumVoice, triggerHaptic } from '../geminiService';
+import { isPremiumVoice, triggerHaptic, getCategorizedVoices } from '../geminiService';
 
 const MOTIVATIONAL_PHRASES = [
   "You are a spelling superstar!",
@@ -21,6 +21,8 @@ interface Props {
 const VoiceSelector: React.FC<Props> = ({ isOpen, onClose, onVoiceSelected }) => {
   const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(loadVoiceSettings());
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [activeTab, setActiveTab] = useState<'ios' | 'android'>('ios');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -28,23 +30,35 @@ const VoiceSelector: React.FC<Props> = ({ isOpen, onClose, onVoiceSelected }) =>
   const helpRef = useRef<HTMLDivElement>(null);
 
   const refreshVoices = () => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
-    
-    // Deduplicate by voiceURI to prevent React key errors
-    const uniqueVoices = Array.from(new Map(voices.map(v => [v.voiceURI, v])).values());
-    
-    // Show ALL English voices as requested, but we can still sort them to put premium first
-    const sortedVoices = [...uniqueVoices].sort((a, b) => {
-      const aPremium = isPremiumVoice(a);
-      const bPremium = isPremiumVoice(b);
-      if (aPremium && !bPremium) return -1;
-      if (!aPremium && bPremium) return 1;
-      return a.name.localeCompare(b.name);
-    });
-
-    setAvailableVoices(sortedVoices);
+    const { elite, backup, isLoading: loading } = getCategorizedVoices();
+    const combined = [...elite, ...backup];
+    setAvailableVoices(combined);
+    setIsLoading(loading);
   };
+
+  useEffect(() => {
+    refreshVoices();
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      // Some browsers need a small delay or multiple checks
+      const interval = setInterval(() => {
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+          refreshVoices();
+          clearInterval(interval);
+        }
+      }, 100);
+
+      window.speechSynthesis.onvoiceschanged = () => {
+        refreshVoices();
+        clearInterval(interval);
+      };
+
+      return () => {
+        clearInterval(interval);
+        window.speechSynthesis.onvoiceschanged = null;
+      };
+    }
+  }, []);
 
   useEffect(() => {
     if (showHelp && helpRef.current) {
@@ -54,18 +68,7 @@ const VoiceSelector: React.FC<Props> = ({ isOpen, onClose, onVoiceSelected }) =>
     }
   }, [showHelp]);
 
-  useEffect(() => {
-    refreshVoices();
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.onvoiceschanged = refreshVoices;
-    }
-  }, []);
-
   if (!isOpen) return null;
-
-  const getRandomPhrase = () => {
-    return MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
-  };
 
   const speakWithSettings = (text: string, voice?: SpeechSynthesisVoice) => {
     const targetVoice = voice || availableVoices.find(v => v.voiceURI === voiceSettings.voiceURI);
@@ -85,10 +88,9 @@ const VoiceSelector: React.FC<Props> = ({ isOpen, onClose, onVoiceSelected }) =>
     setVoiceSettings(s);
     saveVoiceSettings(s);
     
-    // Automatic playback on change
     const voice = availableVoices.find(v => v.voiceURI === voiceURI);
     if (voice) {
-      speakWithSettings(getRandomPhrase(), voice);
+      speakWithSettings(MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)], voice);
     }
     if (onVoiceSelected) onVoiceSelected();
   };
@@ -104,9 +106,8 @@ const VoiceSelector: React.FC<Props> = ({ isOpen, onClose, onVoiceSelected }) =>
     speakWithSettings(text);
   };
 
-  const getCleanName = (name: string) => {
-    return name.replace(/Microsoft|Google|English|United States|Android|Speech|Engine|en-US|\(.*\)/gi, '').trim();
-  };
+  const currentVoice = availableVoices.find(v => v.voiceURI === voiceSettings.voiceURI);
+  const cleanName = (name: string) => name.replace(/Microsoft|Google|English|United States|Android|Speech|Engine|en-US|\(.*\)/gi, '').trim();
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-6">
@@ -128,16 +129,26 @@ const VoiceSelector: React.FC<Props> = ({ isOpen, onClose, onVoiceSelected }) =>
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Seleccionar Voz</label>
             <div className="relative">
               <button 
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-[15px] font-bold text-slate-700 flex items-center justify-between transition-all hover:border-slate-200"
+                onClick={() => !isLoading && setIsDropdownOpen(!isDropdownOpen)}
+                disabled={isLoading}
+                className={`w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-[15px] font-bold text-slate-700 flex items-center justify-between transition-all hover:border-slate-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <span className="truncate">
-                  {voiceSettings.voiceURI ? 
-                    getCleanName(availableVoices.find(v => v.voiceURI === voiceSettings.voiceURI)?.name || 'Voz seleccionada') : 
-                    'Elige una voz...'}
-                  {voiceSettings.voiceURI && availableVoices.find(v => v.voiceURI === voiceSettings.voiceURI) && isPremiumVoice(availableVoices.find(v => v.voiceURI === voiceSettings.voiceURI)!) ? ' 🌟' : ''}
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                      Cargando voces...
+                    </span>
+                  ) : (
+                    <>
+                      {currentVoice ? cleanName(currentVoice.name) : 'Elige una voz...'}
+                      {currentVoice && isPremiumVoice(currentVoice) ? ' 🌟' : ''}
+                    </>
+                  )}
                 </span>
-                <span className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
+                {!isLoading && (
+                  <span className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
+                )}
               </button>
 
               {isDropdownOpen && (
@@ -153,7 +164,7 @@ const VoiceSelector: React.FC<Props> = ({ isOpen, onClose, onVoiceSelected }) =>
                         voiceSettings.voiceURI === v.voiceURI ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600 hover:bg-slate-50'
                       }`}
                     >
-                      <span>{getCleanName(v.name)}</span>
+                      <span>{cleanName(v.name)}</span>
                       {isPremiumVoice(v) && <span className="text-xs">🌟</span>}
                     </button>
                   ))}
@@ -241,12 +252,22 @@ const VoiceSelector: React.FC<Props> = ({ isOpen, onClose, onVoiceSelected }) =>
                     </p>
                     <button 
                       onClick={() => {
+                        setIsRefreshing(true);
                         triggerHaptic('success');
                         refreshVoices();
+                        setTimeout(() => setIsRefreshing(false), 2000);
                       }}
-                      className="w-full py-2.5 bg-white border border-amber-200 text-amber-700 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
+                      disabled={isRefreshing}
+                      className={`w-full py-2.5 bg-white border border-amber-200 text-amber-700 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm ${isRefreshing ? 'opacity-75' : ''}`}
                     >
-                      🔄 Actualizar lista de voces
+                      {isRefreshing ? (
+                        <>
+                          <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce"></span>
+                          Buscando nuevas voces...
+                        </>
+                      ) : (
+                        <>🔄 Actualizar lista de voces</>
+                      )}
                     </button>
                   </div>
                 </div>

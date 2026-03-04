@@ -34,6 +34,8 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
   const resetTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isVoiceStudioOpen, setIsVoiceStudioOpen] = useState(false);
+  const [isTallerOpen, setIsTallerOpen] = useState(false);
+  const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(loadVoiceSettings());
   const [categorizedVoices, setCategorizedVoices] = useState<{elite: SpeechSynthesisVoice[], backup: SpeechSynthesisVoice[]}>({elite: [], backup: []});
 
@@ -81,9 +83,9 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
 
   // Notificar a App.tsx si algún modal está abierto
   useEffect(() => {
-    const isAnyModalOpen = isAdding || !!viewingReportId || isVoiceStudioOpen || isSettingsOpen;
+    const isAnyModalOpen = isAdding || !!viewingReportId || isVoiceStudioOpen || isSettingsOpen || isAchievementsOpen;
     onModalStateChange(isAnyModalOpen);
-  }, [isAdding, viewingReportId, isVoiceStudioOpen, isSettingsOpen, onModalStateChange]);
+  }, [isAdding, viewingReportId, isVoiceStudioOpen, isSettingsOpen, isAchievementsOpen, onModalStateChange]);
 
   const showToast = (msg: string, type: 'success' | 'info' = 'success') => {
     setToast({ msg, type });
@@ -222,7 +224,7 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
   const currentVoice = [...categorizedVoices.elite, ...categorizedVoices.backup].find(v => v.voiceURI === voiceSettings.voiceURI);
   
   const getVoiceDisplayName = () => {
-    if (!currentVoice) return "Automática";
+    if (!currentVoice) return "Voz Narrador";
     return currentVoice.name.replace(/Microsoft|Google|English|United States|Android|Speech|Engine|en-US|\(.*\)/gi, '').trim();
   };
 
@@ -243,95 +245,57 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
   };
 
   const renderParentView = () => (
-    <div className="animate-in fade-in duration-700 space-y-4">
-      {/* BANNER DE RECUPERACIÓN (Solo si está limpio el sistema) */}
-      {showRecoveryAlert && (
-          <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r-2xl flex justify-between items-center shadow-sm animate-in fade-in slide-in-from-top-4">
-              <div className="pr-4">
-                  <p className="font-bold text-amber-800 text-[15px] sm:text-[17px] mb-0.5">¿No ves tus listas?</p>
-                  <p className="text-[11px] text-amber-600 leading-tight">Si tenías una copia guardada, restáurala aquí.</p>
-              </div>
-              <button onClick={handleImportClick} className="bg-white text-amber-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm border border-amber-100 active:scale-95 transition-transform whitespace-nowrap">
-                  Restaurar
-              </button>
-          </div>
-      )}
+    <div className="flex-1 flex flex-col justify-between animate-in fade-in duration-700 min-h-0">
+      {/* 1. CABECERA HEROICA REFINADA */}
+      <div className="text-center px-6 pt-2 space-y-4 flex-shrink-0">
+        <p className="text-slate-400 text-[13px] sm:text-[15px] leading-relaxed max-w-xs mx-auto font-medium">
+          ¡Aprender a deletrear es una gran aventura! Tu hijo juega y conquista palabras a su propio ritmo, mientras tú celebras cada victoria y monitoreas su camino hacia la maestría.
+        </p>
+        <p className="text-indigo-400/80 text-[12px] sm:text-[14px] font-bold italic tracking-wide">
+          ¡Aquí el error es solo el primer paso para ganar! 🚀🏆
+        </p>
+      </div>
 
-      {isDevMode && (
-        <button onClick={openNewListModal} className="w-full p-6 border-2 border-dashed border-slate-200 rounded-[2.5rem] text-slate-400 mb-8 active:scale-98 transition-all font-bold group hover:border-indigo-200 hover:bg-indigo-50/50 animate-in fade-in slide-in-from-top-4">
-          <span className="group-hover:text-indigo-400 transition-colors text-[15px] sm:text-[17px]">+ Nueva Aventura</span>
-        </button>
-      )}
+      {/* 2. ESPACIO CENTRAL - LLAMADO A LA AVENTURA (ESTÁTICO) */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 min-h-0 overflow-hidden select-none pointer-events-none">
+        <div className="flex flex-col items-center justify-center py-8 flex-shrink-0">
+           <div className="text-7xl mb-6 animate-levitate drop-shadow-2xl">✨</div>
+           <div className="space-y-2 text-center">
+             <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 opacity-40">
+               El viaje del héroe
+             </p>
+             <p className="text-[10px] font-medium italic text-slate-300 opacity-30 tracking-widest">
+               Tu hazaña comienza con una palabra...
+             </p>
+           </div>
+        </div>
+      </div>
 
-      {lists.map(list => (
-        <div key={list.id} className="relative group mb-4">
-          <div onClick={() => { setEditingListId(list.id); setIsAdding(true); setNewListName(list.name); setSelectedTheme(list.themeIndex); setInputText(list.words.map(w => w.original).join(' ')); }} 
-                className="bg-white p-4 sm:p-5 pr-20 rounded-[2rem] shadow-sm border border-slate-50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer">
-            <div className="flex items-center gap-4 w-full">
-              {/* ICONO ESTANDARIZADO: Tamaño fijo, no flexible */}
-              <div className={`w-14 h-14 min-w-[3.5rem] rounded-2xl bg-gradient-to-br ${THEMES[list.themeIndex]?.gradient || THEMES[0].gradient} flex items-center justify-center text-2xl shadow-inner group-hover:scale-105 transition-transform ${list.themeIndex === 8 ? 'text-slate-400' : 'text-white'} shadow-black/10 flex-shrink-0`}>📝</div>
-              <div className="min-w-0">
-                <h3 className="text-[15px] sm:text-[17px] font-bold text-slate-800 leading-tight truncate pr-2">{list.name}</h3>
-                <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">{list.words.length} PALABRAS</span>
-              </div>
-            </div>
-          </div>
-          <button onClick={(e) => { e.stopPropagation(); setViewingReportId(list.id); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center shadow-sm active:scale-90 transition-all hover:bg-indigo-100">
-            📈
+      {/* 3. TRIPLE PÍLDORA HORIZONTAL (VOZ, TALLER, HISTORIAL) */}
+      <div className="px-4 pb-28 flex-shrink-0">
+        <div className="grid grid-cols-3 gap-3">
+          {/* BOTÓN VOZ */}
+          <button onClick={() => setIsVoiceStudioOpen(true)} 
+                  className="bg-white py-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:shadow-md">
+            <span className="text-xl">🔊</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">VOZ</span>
+          </button>
+
+          {/* BOTÓN TALLER */}
+          <button onClick={() => setIsTallerOpen(true)} 
+                  className={`py-4 rounded-[2rem] shadow-sm border flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:shadow-md ${isTallerOpen ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-white border-slate-100 text-slate-400'}`}>
+            <span className="text-xl">📦</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.2em]">TALLER</span>
+          </button>
+
+          {/* BOTÓN HISTORIAL */}
+          <button onClick={() => setIsAchievementsOpen(true)} 
+                  className="bg-white py-4 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-1 active:scale-95 transition-all hover:shadow-md">
+            <span className="text-xl">🏆</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-500">HISTORIAL</span>
           </button>
         </div>
-      ))}
-
-      {isAdding && (
-        <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md flex items-end sm:items-center justify-center">
-          <div className="w-full h-[95vh] sm:h-auto sm:max-h-[85vh] bg-[#fdfdfe] rounded-t-[2.5rem] sm:rounded-[3rem] shadow-2xl overflow-y-auto flex flex-col animate-in slide-in-from-bottom-20 duration-500">
-            <div className="p-6 sticky top-0 bg-[#fdfdfe]/90 backdrop-blur-md z-10 border-b border-slate-50 flex justify-between items-center">
-              <h2 className="text-2xl font-elegant font-bold text-slate-800">{editingListId ? 'Editar Mundo' : 'Nuevo Mundo'}</h2>
-              <button onClick={resetForm} className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center active:scale-90 hover:bg-slate-200 transition-colors">✕</button>
-            </div>
-            
-            <div className="p-6 space-y-8 pb-32">
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2">Nombre de la Aventura</label>
-                <input className="w-full p-5 rounded-2xl bg-slate-50 border border-slate-100 text-[15px] sm:text-[17px] font-bold placeholder:font-normal placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all" 
-                       placeholder="Ej: Animales del Bosque" value={newListName} onChange={e => setNewListName(e.target.value)} />
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2">Elige el Ambiente</label>
-                <div className="grid grid-cols-5 gap-2">
-                  {THEMES.map(theme => (
-                    <button key={theme.id} onClick={() => setSelectedTheme(theme.id)} 
-                            className={`h-14 rounded-xl bg-gradient-to-br ${theme.gradient} border-4 transition-all ${theme.id === 8 ? 'shadow-[0_4px_15px_rgba(0,0,0,0.12)]' : 'shadow-sm'} ${selectedTheme === theme.id ? 'border-slate-800 scale-105 shadow-xl ring-2 ring-offset-2 ring-slate-200' : 'border-transparent opacity-70 hover:opacity-100'}`}>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2">Palabras (Separadas por espacio)</label>
-                <textarea className="w-full p-5 h-48 rounded-2xl bg-slate-50 border border-slate-100 text-[15px] sm:text-[17px] leading-relaxed placeholder:font-normal placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all font-medium text-slate-600" 
-                          placeholder="gato perro sol luna..." value={inputText} onChange={e => setInputText(e.target.value)} />
-              </div>
-
-              <button onClick={handleSaveList} 
-                      className={`w-full p-5 rounded-2xl font-bold text-[15px] sm:text-[17px] active:scale-95 transition-all shadow-xl hover:shadow-2xl ${saveConfirm ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-slate-900 text-white shadow-slate-200'}`}>
-                {editingListId 
-                  ? (saveConfirm ? '¿Confirmar cambios?' : 'Guardar Cambios') 
-                  : 'Crear Aventura'}
-              </button>
-
-              {editingListId && (
-                <button onClick={() => handleDeleteList(editingListId)} 
-                        className={`w-full p-5 rounded-2xl font-bold text-[15px] sm:text-[17px] transition-all duration-300 border-2 border-dashed ${deleteConfirmId === editingListId ? 'bg-rose-500 border-rose-400 text-white scale-105 shadow-lg' : 'bg-white border-slate-200 text-slate-400 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-400'}`}>
-                  {deleteConfirmId === editingListId ? '¿Seguro? Toca para borrar' : 'Eliminar Aventura'}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 
@@ -341,11 +305,11 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
     const totalErrors = listsWithErrors.reduce((acc, l) => acc + l.words.filter(w => (w.errors || 0) > 0).length, 0);
 
     return (
-      <div className="animate-in fade-in duration-700 space-y-6">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-1 pb-32 animate-in fade-in duration-700 space-y-6">
         {/* ISLA DE PRÁCTICA - Solo visible si hay deudas de aprendizaje */}
         {totalErrors > 0 && (
           <div onClick={() => onStartGame(listsWithErrors[0].id, 'repaso')}
-            className="w-full p-6 rounded-[3rem] bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 shadow-2xl relative overflow-hidden group active:scale-95 transition-all mb-8 cursor-pointer border border-white/10">
+            className="w-full p-6 rounded-[3rem] bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 shadow-2xl relative overflow-hidden group active:scale-95 transition-all mb-4 cursor-pointer border border-white/10">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex items-center gap-5">
@@ -362,7 +326,7 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3 pb-8">
+        <div className="grid grid-cols-2 gap-3">
           {lists.map((list, i) => {
             const logros = list.words.filter(w => w.completed && (w.errors || 0) === 0).length;
             const retos = list.words.filter(w => (w.errors || 0) > 0).length;
@@ -558,10 +522,159 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
     );
   };
 
+  const renderAchievementsModal = () => {
+    const allWords = lists.flatMap(l => l.words).filter(w => w.completed);
+    const goldWords = allWords.filter(w => w.medal === 'gold');
+    const silverWords = allWords.filter(w => w.medal === 'silver');
+    const bronzeWords = allWords.filter(w => w.medal === 'bronze');
+
+    const AchievementSection = ({ title, words, icon, color, description }: { title: string, words: Word[], icon: string, color: string, description: string }) => (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-3">
+            <div className={`w-12 h-12 rounded-2xl ${color} flex items-center justify-center text-2xl shadow-sm`}>{icon}</div>
+            <div>
+              <h3 className="text-lg font-elegant font-bold text-slate-800">{title}</h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{words.length} PALABRAS</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-[11px] text-slate-400 italic px-2 leading-relaxed">{description}</p>
+        
+        {words.length > 0 ? (
+          <div className="flex flex-wrap gap-2 px-1">
+            {words.map((w, i) => (
+              <div key={w.id + i} className="px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm text-sm font-bold text-slate-600 capitalize animate-in zoom-in-95" style={{ animationDelay: `${i * 0.05}s` }}>
+                {w.original}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 border-2 border-dashed border-slate-100 rounded-[2rem] flex flex-col items-center justify-center text-center">
+            <span className="text-2xl grayscale opacity-20 mb-2">{icon}</span>
+            <p className="text-xs text-slate-300 font-bold uppercase tracking-widest">Aún sin conquistas</p>
+          </div>
+        )}
+      </div>
+    );
+
+    return (
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-6">
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in" onClick={() => setIsAchievementsOpen(false)}></div>
+        <div className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 animate-in zoom-in-95 flex flex-col max-h-[90vh] overflow-hidden border border-white/20">
+          <div className="p-6 pb-4 flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-elegant font-bold text-slate-800">Salón de la Fama</h2>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">El Libro de los Héroes</p>
+            </div>
+            <button onClick={() => setIsAchievementsOpen(false)} className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center active:scale-90 transition-all">✕</button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-12 custom-scrollbar pb-12">
+            <AchievementSection 
+              title="🥇 Imbatibles" 
+              words={goldWords} 
+              icon="🥇" 
+              color="bg-amber-50" 
+              description="Palabras logradas al primer intento. ¡Maestría total y enfoque absoluto!"
+            />
+            <AchievementSection 
+              title="🥈 Persistentes" 
+              words={silverWords} 
+              icon="🥈" 
+              color="bg-slate-50" 
+              description="Palabras conquistadas tras corregir el primer error. ¡Gran capacidad de aprendizaje!"
+            />
+            <AchievementSection 
+              title="🥉 Grandes Victorias" 
+              words={bronzeWords} 
+              icon="🥉" 
+              color="bg-orange-50" 
+              description="Palabras que fueron un gran reto pero no te rendiste. ¡Este es el rincón del orgullo!"
+            />
+          </div>
+          
+          <div className="p-6 bg-slate-50/50 border-t border-slate-50">
+            <button onClick={() => setIsAchievementsOpen(false)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-[15px] active:scale-95 transition-all">Listo</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTallerModal = () => {
+    if (!isTallerOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-6">
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in" onClick={() => setIsTallerOpen(false)}></div>
+        <div className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 animate-in zoom-in-95 flex flex-col max-h-[90vh] overflow-hidden border border-white/20">
+          <div className="p-6 pb-4 flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-elegant font-bold text-slate-800">Taller de Mundos</h2>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Gestiona tus aventuras</p>
+            </div>
+            <button onClick={() => setIsTallerOpen(false)} className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center active:scale-90 transition-all">✕</button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-4 custom-scrollbar pb-12">
+            {/* BANNER DE RECUPERACIÓN */}
+            {showRecoveryAlert && (
+                <div className="bg-amber-50/50 border-l-4 border-amber-400 p-4 rounded-r-2xl flex justify-between items-center shadow-sm mb-4">
+                    <div className="pr-4">
+                        <p className="font-bold text-amber-800 text-[14px] mb-0.5">¿No ves tus listas?</p>
+                        <button onClick={handleImportClick} className="text-[10px] text-amber-600 font-black uppercase tracking-widest underline">Restaurar ahora</button>
+                    </div>
+                </div>
+            )}
+
+            {isDevMode && (
+              <button onClick={openNewListModal} className="w-full p-4 border-2 border-dashed border-slate-100 rounded-2xl text-slate-300 active:scale-98 transition-all font-black uppercase tracking-[0.2em] text-[10px] hover:bg-indigo-50/30 mb-4">
+                + Nueva Aventura
+              </button>
+            )}
+
+            <div className="space-y-3">
+              {lists.map(list => (
+                <div key={list.id} className="relative group">
+                  <div onClick={() => { 
+                        setEditingListId(list.id); 
+                        setIsAdding(true); 
+                        setNewListName(list.name); 
+                        setSelectedTheme(list.themeIndex); 
+                        setInputText(list.words.map(w => w.original).join(' '));
+                        setIsTallerOpen(false); // Cerrar taller al editar
+                      }} 
+                        className="bg-white p-4 pr-16 rounded-[2rem] shadow-sm border border-slate-50/50 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer">
+                    <div className="flex items-center gap-4 w-full">
+                      <div className={`w-12 h-12 min-w-[3rem] rounded-2xl bg-gradient-to-br ${THEMES[list.themeIndex]?.gradient || THEMES[0].gradient} flex items-center justify-center text-xl shadow-inner ${list.themeIndex === 8 ? 'text-slate-400' : 'text-white'} flex-shrink-0`}>📝</div>
+                      <div className="min-w-0">
+                        <h3 className="text-[14px] font-bold text-slate-700 truncate mb-0.5">{list.name}</h3>
+                        <span className="text-[8px] text-slate-300 font-black uppercase tracking-[0.2em]">{list.words.length} PALABRAS</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); setViewingReportId(list.id); }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-indigo-50/50 text-indigo-400 rounded-xl flex items-center justify-center shadow-sm active:scale-90 transition-all">
+                    <span className="text-sm">📈</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="p-6 bg-slate-50/50 border-t border-slate-50">
+            <button onClick={() => setIsTallerOpen(false)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-[15px] active:scale-95 transition-all">Listo</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="w-full max-w-md mx-auto p-4 md:p-6 pb-64">
+    <div className="w-full max-w-md mx-auto p-4 md:p-6 h-[100dvh] flex flex-col overflow-hidden">
       {/* HEADER CON BOTÓN DE AJUSTES */}
-      <header className="flex items-center justify-between mb-10 mt-6 relative">
+      <header className="flex items-center justify-between mb-4 mt-2 relative flex-shrink-0">
         <div className="w-10"></div> {/* Spacer */}
         <div 
             className="flex flex-col items-center select-none cursor-pointer p-4 -m-4 rounded-2xl active:scale-95 transition-transform" 
@@ -591,23 +704,12 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
           className="hidden" 
       />
 
-      {role === 'parent' && (
-          <div className="mb-8">
-            <button onClick={() => setIsVoiceStudioOpen(true)} className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-2xl shadow-sm border border-slate-100 text-slate-500 active:scale-95 transition-all">
-                <div className="flex items-center gap-3">
-                <span className="text-lg">🔊</span>
-                <div className="flex flex-col items-start min-w-0">
-                    <span className="text-[10px] uppercase font-bold tracking-widest text-slate-300 text-left">Voz actual</span>
-                    <span className="text-[15px] sm:text-[17px] font-semibold font-elegant truncate max-w-[180px]">{getVoiceDisplayName()}</span>
-                </div>
-                </div>
-            </button>
-          </div>
-      )}
-
 
       {role === 'child' ? renderChildView() : renderParentView()}
       
+      {isAchievementsOpen && renderAchievementsModal()}
+      {isTallerOpen && renderTallerModal()}
+
       <VoiceSelector 
         isOpen={isVoiceStudioOpen} 
         onClose={() => {
@@ -649,13 +751,75 @@ const ParentDashboard: React.FC<Props> = ({ onStartGame, role, onModalStateChang
 
       {/* MODAL REPORTE */}
       {viewingReportId && (
-        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-6">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setViewingReportId(null)}></div>
-          <div className="bg-white w-full max-w-lg rounded-t-[3rem] sm:rounded-[3rem] p-8 shadow-2xl relative z-20 animate-in slide-in-from-bottom-20 max-h-[85vh] flex flex-col">
-            <h2 className="text-2xl font-elegant font-bold text-slate-800 mb-1">Estado de Aprendizaje</h2>
-            <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest mb-4">Progreso de la aventura</p>
-            {renderReportList()}
-            <button onClick={() => setViewingReportId(null)} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold active:scale-95 transition-transform">Volver</button>
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in" onClick={() => setViewingReportId(null)}></div>
+          <div className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 animate-in zoom-in-95 flex flex-col max-h-[90vh] overflow-hidden border border-white/20">
+            <div className="p-6 pb-4 flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-elegant font-bold text-slate-800">Estado</h2>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Progreso de la aventura</p>
+              </div>
+              <button onClick={() => setViewingReportId(null)} className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center active:scale-90 transition-all">✕</button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 pt-2 custom-scrollbar pb-12">
+              {renderReportList()}
+            </div>
+
+            <div className="p-6 bg-slate-50/50 border-t border-slate-50">
+              <button onClick={() => setViewingReportId(null)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-[15px] active:scale-95 transition-all">Listo</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL NUEVA AVENTURA */}
+      {isAdding && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md flex items-end sm:items-center justify-center">
+          <div className="w-full h-[95vh] sm:h-auto sm:max-h-[85vh] bg-[#fdfdfe] rounded-t-[2.5rem] sm:rounded-[3rem] shadow-2xl overflow-y-auto flex flex-col animate-in slide-in-from-bottom-20 duration-500">
+            <div className="p-6 pt-[calc(1.5rem+env(safe-area-inset-top))] sticky top-0 bg-[#fdfdfe]/90 backdrop-blur-md z-10 border-b border-slate-50 flex justify-between items-center">
+              <h2 className="text-2xl font-elegant font-bold text-slate-800">{editingListId ? 'Editar Mundo' : 'Nuevo Mundo'}</h2>
+              <button onClick={resetForm} className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center active:scale-90 hover:bg-slate-200 transition-colors">✕</button>
+            </div>
+            
+            <div className="p-6 space-y-8 pb-32">
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2">Nombre de la Aventura</label>
+                <input className="w-full p-5 rounded-2xl bg-slate-50 border border-slate-100 text-[15px] sm:text-[17px] font-bold placeholder:font-normal placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all" 
+                       placeholder="Ej: Animales del Bosque" value={newListName} onChange={e => setNewListName(e.target.value)} />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2">Elige el Ambiente</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {THEMES.map(theme => (
+                    <button key={theme.id} onClick={() => setSelectedTheme(theme.id)} 
+                            className={`h-14 rounded-xl bg-gradient-to-br ${theme.gradient} border-4 transition-all ${theme.id === 8 ? 'shadow-[0_4px_15px_rgba(0,0,0,0.12)]' : 'shadow-sm'} ${selectedTheme === theme.id ? 'border-slate-800 scale-105 shadow-xl ring-2 ring-offset-2 ring-slate-200' : 'border-transparent opacity-70 hover:opacity-100'}`}>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2">Palabras (Separadas por espacio)</label>
+                <textarea className="w-full p-5 h-48 rounded-2xl bg-slate-50 border border-slate-100 text-[15px] sm:text-[17px] leading-relaxed placeholder:font-normal placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all font-medium text-slate-600" 
+                          placeholder="gato perro sol luna..." value={inputText} onChange={e => setInputText(e.target.value)} />
+              </div>
+
+              <button onClick={handleSaveList} 
+                      className={`w-full p-5 rounded-2xl font-bold text-[15px] sm:text-[17px] active:scale-95 transition-all shadow-xl hover:shadow-2xl ${saveConfirm ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-slate-900 text-white shadow-slate-200'}`}>
+                {editingListId 
+                  ? (saveConfirm ? '¿Confirmar cambios?' : 'Guardar Cambios') 
+                  : 'Crear Aventura'}
+              </button>
+
+              {editingListId && (
+                <button onClick={() => handleDeleteList(editingListId)} 
+                        className={`w-full p-5 rounded-2xl font-bold text-[15px] sm:text-[17px] transition-all duration-300 border-2 border-dashed ${deleteConfirmId === editingListId ? 'bg-rose-500 border-rose-400 text-white scale-105 shadow-lg' : 'bg-white border-slate-200 text-slate-400 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-400'}`}>
+                  {deleteConfirmId === editingListId ? '¿Seguro? Toca para borrar' : 'Eliminar Aventura'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

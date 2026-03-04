@@ -156,6 +156,20 @@ const GameScreen: React.FC<Props> = ({ listId, words, themeIndex, mode, onExit }
         word.errors = finalErrorLevel;
         if (finalErrorLevel === 0) word.successes = (word.successes || 0) + 1;
         word.completed = true;
+
+        // Registro histórico de medalla (Memoria de Esfuerzo)
+        // Solo se guarda la primera vez que se conquista la palabra
+        if (!word.medal) {
+          if (finalErrorLevel === 0) {
+            word.medal = 'gold';
+          } else if (finalErrorLevel === 1) {
+            word.medal = 'silver';
+          } else {
+            word.medal = 'bronze';
+          }
+          word.conqueredAt = Date.now();
+        }
+        
         saveLists(lists);
         
         // Trigger Saved Indicator
@@ -243,7 +257,7 @@ const GameScreen: React.FC<Props> = ({ listId, words, themeIndex, mode, onExit }
       {/* Capa de textura y oscurecimiento para garantizar que el texto blanco se lea */}
       <div className={`absolute inset-0 bg-black/10 mix-blend-overlay ${mode === 'repaso' ? "bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30" : ""}`}></div>
       
-      <button onClick={onExit} className={`fixed top-4 right-4 z-[100] w-10 h-10 backdrop-blur-md rounded-full active:scale-90 flex items-center justify-center font-bold border transition-all ${themeIndex === 8 ? 'bg-black/10 text-slate-800 border-black/10 shadow-md' : 'bg-white/10 text-white border-white/10 shadow-sm'}`}>
+      <button onClick={onExit} className={`fixed top-[calc(1rem+env(safe-area-inset-top))] right-4 z-[100] w-10 h-10 backdrop-blur-md rounded-full active:scale-90 flex items-center justify-center font-bold border transition-all ${themeIndex === 8 ? 'bg-black/10 text-slate-800 border-black/10 shadow-md' : 'bg-white/10 text-white border-white/10 shadow-sm'}`}>
         <span className="drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.3)]">✕</span>
       </button>
 

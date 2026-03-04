@@ -3,8 +3,10 @@ export interface Word {
   original: string;
   id: string;
   errors: number;
-  successes: number; // Nuevo campo para aciertos
+  successes: number;
   completed: boolean;
+  medal?: 'gold' | 'silver' | 'bronze';
+  conqueredAt?: number;
 }
 
 export interface WordList {

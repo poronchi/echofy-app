@@ -28,6 +28,7 @@ export const triggerHaptic = (type: 'success' | 'error' | 'click') => {
  */
 export const isPremiumVoice = (voice: SpeechSynthesisVoice): boolean => {
   const name = voice.name.toLowerCase();
+  const uri = voice.voiceURI.toLowerCase();
   return (
     name.includes('premium') || 
     name.includes('enhanced') || 
@@ -36,41 +37,52 @@ export const isPremiumVoice = (voice: SpeechSynthesisVoice): boolean => {
     name.includes('siri') || 
     name.includes('google') ||
     name.includes('ava') || 
-    name.includes('samantha')
+    name.includes('samantha') ||
+    uri.includes('premium') ||
+    uri.includes('enhanced')
   );
 };
 
 export const getCategorizedVoices = () => {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return { elite: [], backup: [] };
+  if (typeof window === 'undefined' || !window.speechSynthesis) return { elite: [], backup: [], isLoading: true };
+  
   const allVoices = window.speechSynthesis.getVoices();
-  
-  // Deduplicate voices based on voiceURI to prevent React key errors
-  const uniqueVoices = Array.from(new Map(allVoices.map(v => [v.voiceURI, v])).values());
-  
-  const usVoices = uniqueVoices.filter(v => v.lang.toLowerCase().replace('_', '-').startsWith('en-us'));
+  if (allVoices.length === 0) return { elite: [], backup: [], isLoading: true };
 
-  if (usVoices.length === 0) return { elite: [], backup: [] };
-
+  // Filter for English voices (primarily US/GB)
+  const englishVoices = allVoices.filter(v => v.lang.toLowerCase().startsWith('en'));
+  
+  // Deduplicate by voiceURI
+  const uniqueVoices = Array.from(new Map(englishVoices.map(v => [v.voiceURI, v])).values());
+  
   const elite: SpeechSynthesisVoice[] = [];
   const backup: SpeechSynthesisVoice[] = [];
 
-  usVoices.forEach(v => {
+  uniqueVoices.forEach(v => {
     if (isPremiumVoice(v)) elite.push(v);
     else backup.push(v);
   });
 
+  // Sort elite by quality keywords
   elite.sort((a, b) => {
     const score = (v: SpeechSynthesisVoice) => {
       const n = v.name.toLowerCase();
       if (n.includes('enhanced')) return 10;
-      if (n.includes('premium')) return 8;
+      if (n.includes('premium')) return 9;
+      if (n.includes('neural')) return 8;
       if (n.includes('natural')) return 7;
+      if (n.includes('siri')) return 6;
       return 5;
     };
     return score(b) - score(a);
   });
 
-  return { elite: elite.slice(0, 5), backup: backup.slice(0, 3) };
+  // Only keep the top 2 backup voices as requested
+  return { 
+    elite, 
+    backup: backup.slice(0, 2),
+    isLoading: false
+  };
 };
 
 const getBestVoice = (settings: ReturnType<typeof loadVoiceSettings>): { voice: SpeechSynthesisVoice | null } => {
